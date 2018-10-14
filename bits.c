@@ -111,7 +111,8 @@ NOTES:
  */
 int absVal(int x)
 {
-    return 42;
+    int y = ( x >> 31);
+    return ( x ^ y) - y;
 }
 
 /*
@@ -124,7 +125,8 @@ int absVal(int x)
  */
 int addOK(int x, int y)
 {
-    return 42;
+    int sum = x + y;
+    return !(((sum ^ x) & (sum ^ y)) >> 31);
 }
 
 /*
@@ -137,7 +139,12 @@ int addOK(int x, int y)
  */
 int allEvenBits(int x)
 {
-    return 42;
+    int everyBit;
+    int allOdd = (0xAA << 8) | 0xAA; 
+    allOdd = allOdd | (allOdd << 16); /*int with all odd bits set to 1*/
+    everyBit = allOdd | x; 
+    everyBit = ~everyBit; /*all 0's if x had each even bit at 1*/
+    return !everyBit;
 }
 
 /*
@@ -150,7 +157,12 @@ int allEvenBits(int x)
  */
 int allOddBits(int x)
 {
-    return 42;
+    int everyBit;
+    int allEven = (0x55 << 8) | 0x55;
+    allEven = allEven | (allEven << 16);
+    everyBit = allEven | x; 
+    everyBit = ~everyBit; /*all 0's if x had each odd bit at 1*/
+    return !everyBit;
 }
 
 /*
@@ -163,7 +175,9 @@ int allOddBits(int x)
  */
 int anyEvenBit(int x)
 {
-    return 42;
+    int y = 0x55 | (0x55<<8);
+    int mask = y | (y<<16);
+    return !!(x&mask);
 }
 
 /*
@@ -176,7 +190,9 @@ int anyEvenBit(int x)
  */
 int anyOddBit(int x)
 {
-    return 42;
+    int y = 0xAA | (0xAA<<8);
+    int mask = y | (y<<16);
+    return !!(x&mask);
 }
 
 /*
@@ -188,7 +204,9 @@ int anyOddBit(int x)
  */
 int bang(int x)
 {
-    return 42;
+    x = x & (~x+1); /*gives mask of least sig bit*/
+    x = ~x + 1; /*sign bit is only zero if x was zero*/
+    return (~(x >> 31)) & 1; /*return opposite of the sign bit*/
 }
 
 /*
@@ -200,7 +218,7 @@ int bang(int x)
  */
 int bitAnd(int x, int y)
 {
-    return 42;
+    return ~( ~x | ~y);
 }
 
 /*
@@ -212,7 +230,12 @@ int bitAnd(int x, int y)
  */
 int bitCount(int x)
 {
-    return 42;
+    x = (x & 0x55555555) + ((x & 0xaaaaaaaa) >> 1);  
+    x = (x & 0x33333333) + ((x & 0xcccccccc) >> 2);  
+    x = (x & 0x0f0f0f0f) + ((x & 0xf0f0f0f0) >> 4);  
+    x = (x & 0x00ff00ff) + ((x & 0xff00ff00) >> 8);  
+    x = (x & 0x0000ffff) + ((x & 0xffff0000) >> 16);  
+    return x;
 }
 
 /*
@@ -227,7 +250,7 @@ int bitCount(int x)
  */
 int bitMask(int highbit, int lowbit)
 {
-    return 42;
+     return ((2 << highbit) + ~0) >> lowbit << lowbit;
 }
 
 /*
@@ -240,7 +263,7 @@ int bitMask(int highbit, int lowbit)
  */
 int bitMatch(int x, int y)
 {
-    return 42;
+    return ~( ~( x | ~ y ) | ~ ( ~ x | y));
 }
 
 /*
@@ -252,7 +275,7 @@ int bitMatch(int x, int y)
  */
 int bitNor(int x, int y)
 {
-    return 42;
+    return (~x & ~y);
 }
 
 /*
@@ -264,7 +287,7 @@ int bitNor(int x, int y)
  */
 int bitOr(int x, int y)
 {
-    return 42;
+    return ~(~x & ~y);
 }
 
 /*
@@ -276,7 +299,12 @@ int bitOr(int x, int y)
  */
 int bitParity(int x)
 {
-    return 42;
+    x ^= x >> 16;
+    x ^= x >> 8;
+    x ^= x >> 4;
+    x ^= x >> 2;
+    x ^= x >> 1;
+    return x &= 1;
 }
 
 /*
@@ -289,7 +317,12 @@ int bitParity(int x)
  */
 int bitReverse(int x)
 {
-    return 42;
+    x = (x & 0x55555555) <<  1 | (x & 0xAAAAAAAA) >>  1; 
+    x = (x & 0x33333333) <<  2 | (x & 0xCCCCCCCC) >>  2; 
+    x = (x & 0x0F0F0F0F) <<  4 | (x & 0xF0F0F0F0) >>  4; 
+    x = (x & 0x00FF00FF) <<  8 | (x & 0xFF00FF00) >>  8; 
+    x = (x & 0x0000FFFF) << 16 | (x & 0xFFFF0000) >> 16;
+    return x;
 }
 
 /*
@@ -301,7 +334,8 @@ int bitReverse(int x)
  */
 int bitXor(int x, int y)
 {
-    return 42;
+    int xAndy = ~( x & y);
+    return ~( ~( xAndy & x) & ~( xAndy & y));
 }
 
 /*
@@ -315,7 +349,24 @@ int bitXor(int x, int y)
  */
 int byteSwap(int x, int n, int m)
 {
-    return 42;
+    int a, b; /* bytes to swap */
+    a = (x & ((1ll << ((n + 1) * 8)) - 1)) >> (n * 8);
+    b = (x & ((1ll << ((m + 1) * 8)) - 1)) >> (m * 8);
+
+    /* swap */
+    a = a ^ b;
+    b = a ^ b;
+    a = a ^ b;
+
+    x = x & (~((0xff << (n * 8))));
+    x = x & (~((0xff << (m * 8))));
+
+    /* put new bytes in place */
+    x = x | (a << (n * 8));
+    x = x | (b << (m * 8));
+
+    return x;
+
 }
 
 /*
@@ -327,7 +378,12 @@ int byteSwap(int x, int n, int m)
  */
 int conditional(int x, int y, int z)
 {
-    return 42;
+    // Converts x to a boolean value
+    x = !(!x); 
+    // Nonzero = 1
+    // Zero = 0 
+    int var = (~(x & 1) + 1);
+    return ((var & y) + ((~var) & z));
 }
 
 /*
@@ -339,7 +395,9 @@ int conditional(int x, int y, int z)
  */
 int copyLSB(int x)
 {
-    return 42;
+    x = x << 31; /*shifts the LSB to MSB*/
+    x = x >> 31; /*exploits the arithmatic shift*/
+    return x;
 }
 
 /*
@@ -351,7 +409,8 @@ int copyLSB(int x)
  */
 int distinctNegation(int x)
 {
-    return 42;
+    x = x ^ (~x + 1);
+    return !!x;
 }
 
 /*
@@ -364,7 +423,7 @@ int distinctNegation(int x)
  */
 int dividePower2(int x, int n)
 {
-    return 42;
+    return (x + ((x >> 31) & ((1 << n) + ~0))) >> n;
 }
 
 /*
@@ -375,7 +434,15 @@ int dividePower2(int x, int n)
  */
 int evenBits(void)
 {
-    return 42;
+    /* 0x55 = 10101010, so to create a number with all even bits we shift
+     * 10101010 to the left 8, 16, and 24 bits to fill out the remainder of a
+     * 32 bit int without using 0x55555555.
+     */
+    int z;
+    int f;
+    z = 0x55;
+    f = (z + (z<<8) + (z<<16) + (z<<24));
+    return f;
 }
 
 /*
@@ -391,7 +458,16 @@ int evenBits(void)
  */
 int ezThreeFourths(int x)
 {
-    return 42;
+    int mask;
+    int whatSign;
+    int bias;
+    int divByFour;
+    x = ((x << 1) +x); //multiply by 3 and then use pwrof2
+    mask = (1 << 2) + ~0;
+    whatSign = x >> 31;
+    bias = mask&whatSign;
+    divByFour = ((x + bias) >> 2);
+    return divByFour;
 }
 
 /*
@@ -405,7 +481,8 @@ int ezThreeFourths(int x)
  */
 int fitsBits(int x, int n)
 {
-    return 42;
+    int shift = 33 + ~n;
+    return !(x ^ ((x << shift) >> shift));
 }
 
 /*
@@ -418,7 +495,10 @@ int fitsBits(int x, int n)
  */
 int fitsShort(int x)
 {
-    return 42;
+    int y;
+  
+    y = x>>15;  
+    return !(y^0) + !(y^(~0));
 }
 
 /*
@@ -434,7 +514,11 @@ int fitsShort(int x)
  */
 unsigned floatAbsVal(unsigned uf)
 {
-    return 42;
+    unsigned a = uf & ~(1 << 31);
+    unsigned B = (0x7F << 24) | (0x80 << 16);
+    if (((a & B) == B) && (a ^ B))
+      return uf;
+    return a;
 }
 
 /*
